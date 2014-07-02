@@ -321,7 +321,7 @@ Motion MotorController::getInitializedMotion(std::string motion_file, std::strin
 	tempMotion.motorIDs.resize(numSteps);
 	tempMotion.time.resize(numSteps);
 	tempMotion.torqueReadings.resize(numSteps);
-	tempMotion.torqueEnabled.resize(numSteps);
+	tempMotion.motorCompliance.resize(numSteps);
 
 	// Loop through the second position and velocity vectors, setting their size equal to the number of motors
 	for (int i = 0; i < numSteps; i++)
@@ -330,10 +330,12 @@ Motion MotorController::getInitializedMotion(std::string motion_file, std::strin
 		tempMotion.motorVelocities[i].resize(tempMotion.num_motors);
 		tempMotion.motorIDs[i].resize(tempMotion.num_motors);
 		tempMotion.torqueReadings[i].resize(tempMotion.num_motors);
-		tempMotion.torqueEnabled[i].resize(tempMotion.num_motors); //TODO unless testing, torque should be 100%
+		tempMotion.motorCompliance[i].resize(tempMotion.num_motors); //TODO unless testing, torque should be 100%
 
+		for(int j= 0; j<tempMotion.num_motors; j++){
+			tempMotion.motorCompliance[i][j]= DEFAULT_MAX_TORQUE; //TODO set to default 100%
+		}
 	}
-	//std::cout << "Motion motor vectors were resized" <<std::endl;
 
 	// Initialize the time, position, and velocity data fields
 	for (int i = 0; i < numSteps; i++)
@@ -348,8 +350,6 @@ Motion MotorController::getInitializedMotion(std::string motion_file, std::strin
 		std::stringstream(aString) >> tempTime;
 		tempMotion.time[i] = tempTime;
 
-		//std::cout<<"\n"<<tempMotion.time[i]<<"\n"<<std::endl;
-
 		for (int j = 0; j < tempMotion.num_motors; j++)
 		{
 			// Initialize the motor positions and velocities from the text file
@@ -361,54 +361,43 @@ Motion MotorController::getInitializedMotion(std::string motion_file, std::strin
 
 			// Find the location of the space character
 			int space = aString.find(tabChar);
-			if(space<0){
-				std::cout<<space<<"getting error reading motion from file: "<<std::endl;
-			}
 
-			//std::cout<<"this is the value of 'space' "<<space<<std::endl;
-			if(space==aString.length()){
-				std::cout<<"getting error reading motion from file: "<<aString.length()<<std::endl;
-			}
-			std::string tempString= aString.substr(space+1);
+			std::string split_after_column_1 = aString.substr(space+1);
 
-			int space2= tempString.find(tabChar);
-			//std::cout<<"this is the value of 'space 2' "<<space<<std::endl;
+			int space2= split_after_column_1.find(tabChar);
+
+			std::string split_after_column_2 = split_after_column_1.substr(space2+1);
+
+			int space3= split_after_column_2.find(tabChar);
+
 
 			// Push the first number into the motor position. In [i=rows][j=columns], i is the step number of the motion we're in and j is the motor number
 			std::stringstream(aString.substr(0, space))>> tempMotion.motorPositions[i][j];
-			if(space2>0){
-				// Push the second number into the velocity position
-				std::stringstream(tempString.substr(0, space2)) >> tempMotion.motorVelocities[i][j];
 
+			if(space2> 0){
+			// Push the second number into the velocity position
+
+			std::stringstream(split_after_column_1.substr(0, space2)) >> tempMotion.motorVelocities[i][j];
+			}
+			if(space3>0){
 
 				// Push the third number into the motor ID position
-				std::stringstream(tempString.substr(space2+1)) >> tempMotion.motorIDs[i][j];
+				// Push the fourth number into the compliancy position
+				std::stringstream(split_after_column_2.substr(0, space3)) >> tempMotion.motorIDs[i][j];
 
-				//std::cout<<"motor ID = "<<tempMotion.motorIDs[i][j]<<std::endl;
+				std::stringstream(split_after_column_2.substr(space3+1)) >> tempMotion.motorCompliance[i][j];
+
 			}
+
 
 			else{
 				std::stringstream(aString.substr(space+1)) >> tempMotion.motorVelocities[i][j];
 			}
 
-			//std::cout << "looking at motor " << j << " value is " <<std::endl;
-			//std::cout << tempMotion.motorIDs[i][j] << std::endl;
-
-			//std::cout<<tempMotion.motorPositions[i][j]<<"\t"<<tempMotion.motorVelocities[i][j]<<"\t"<<tempMotion.motorIDs[i][j]<<std::endl;
 		}
-		//std::cout << "read values into vectors from file" <<std::endl;
-
-		//go through motor ID vector and find the number of motors used by stopping at motor ID zero (no such thing as motor ID 0)
-
-		//			std::cout << "entrered first step" <<std::endl;
-
-		//std::cout << "found num_motors" <<std::endl;
-
 
 	}
-	//std::cout << "Motion Built ^\n "<<std::endl;
-	//std::cout << "This motion uses "<<tempMotion.num_motors<< " motors"<<std::endl;
-	// Close the text file
+
 	file.close();
 
 	// Return the newly initialized motion
@@ -546,25 +535,28 @@ void MotorController::executeNext(Motion motion) {
 
 
 		for (int i = 0; i < motion.num_motors; i++) {
-			data[i] = motion.motorVelocities[motion.currentIndex][i];
+			if(motion.currentIndex==0){
+
+				int finalPos= motion.motorPositions[0][i];
+				data[i]= SPEED_CONSTANT*abs(dxl_read_word(i+1,PRESENT_POSITION)-finalPos)/.5;
+
+			}
+			else{
+				data[i] = motion.motorVelocities[motion.currentIndex][i];
+			}
 		}
 		sendSyncWrite(motors,  MOVING_SPEED, WORD, data);
 
 		//TODO for setting compliancy in the motors
 
 		for (int i = 0; i < motion.num_motors; i++) {
-			if(motion.torqueEnabled[motion.currentIndex][i])
-			{
-				setTorqueLimit(motion.motorIDs[motion.currentIndex][i], currentTorque);
-				std::cout<<"Setting Motor "<<motion.motorIDs[motion.currentIndex][i]<<" to be compliant. "<<currentTorque<< " of 1023"<<std::endl;
-			}
-			else
-			{
-				setTorqueLimit(motion.motorIDs[motion.currentIndex][i], 1023);
-				std::cout<<"Setting Motor "<<motion.motorIDs[motion.currentIndex][i]<<" to be default compliancy"<<std::endl;
-			}
+			data[i] = motion.motorCompliance[motion.currentIndex][i];
+			//setTorqueLimit(motion.motorIDs[motion.currentIndex][i], currentTorque);
+
+			std::cout<<"Setting Motor "<<motion.motorIDs[motion.currentIndex][i]<<" to be compliant. "<<motion.motorCompliance[motion.currentIndex][i]<< " of 1023"<<std::endl;
 
 		}
+		sendSyncWrite(motors, MAX_TORQUE, WORD, data);
 
 		// TODO Change this so it includes the whole body
 
@@ -1362,34 +1354,17 @@ int MotorController::convDegrees(int pos, int index){
 	return degrees;
 }
 
-void MotorController::chooseCompliantLimb(int step, int limb){
-	int rightleg[]= {3, 5, 7, 9, 11};
-	int leftleg[]= {4, 6, 8, 10, 12};
+void MotorController::chooseCompliantLimb(int step, int motorID, int new_compliance){
 
-	switch(limb){
-	case 1:
-		for(int i= 0; i<5; i++){
-			currMo.torqueEnabled[step][leftleg[i]-1]= true;
-		}
-
-		break;
-	case 2:
-		for(int i= 0; i<5; i++){
-			currMo.torqueEnabled[step][rightleg[i]-1]= true;
-		}
-		break;
-	default:
-		break;
-
-	}
+	currMo.motorCompliance[step][motorID-1]= new_compliance; //setting for the previous index brings us to the real "currentIndex" because step is incremented in some other
 }
 
 void MotorController::setCompliantLimb(int compliancy){
 	currentTorque= compliancy;
 }
-void MotorController::setTorqueLimit(int id, int torque) {		//set new torque limits
-	dxl_write_word(id, TORQUE_LIMIT, torque);
-}
+//void MotorController::setTorqueLimit(int id, int torque) {		//set new torque limits
+//	dxl_write_word(id, TORQUE_LIMIT, torque);
+//}
 void MotorController::disableMotor(int motor) {
 	dxl_write_byte(motor, TORQUE_ENABLE, 0);
 }
@@ -1724,7 +1699,7 @@ void MotorController::printMotion(int printCode){
 
 			/*then print out each motor position and speed for this step*/
 			for(int j=0; j<currMo.num_motors; j++){
-				std::cout<< currMo.motorPositions[i][j] <<"\t" <<currMo.motorVelocities[i][j]<<"\t"<<currMo.motorIDs[i][j]<<std::endl;
+				std::cout<< currMo.motorPositions[i][j] <<"\t" <<currMo.motorVelocities[i][j]<<"\t"<<currMo.motorIDs[i][j]<<"\t"<<currMo.motorCompliance[i][j]<<std::endl;
 			}
 			std::cout<<"+---------+"<<std::endl;
 			std::cout<<"| step "<<i<<"  |"<<std::endl;
@@ -1774,7 +1749,7 @@ void MotorController::printMotion(int printCode){
 			//then print out each motor position and speed for this step
 			for(int j=0; j<currMo.num_motors; j++){
 
-				outFile<< currMo.motorPositions[i][j] <<"\t" <<currMo.motorVelocities[i][j]<<"\t"<<currMo.motorIDs[i][j]<<"\n";
+				outFile<< currMo.motorPositions[i][j] <<"\t" <<currMo.motorVelocities[i][j]<<"\t"<<currMo.motorIDs[i][j]<<"\t"<<currMo.motorCompliance[i][j]<<"\n";
 				std::cout << "printed pose speed and motor for step " <<i << std::endl;
 
 			}

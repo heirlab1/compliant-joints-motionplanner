@@ -17,10 +17,10 @@
 #include <cmath>
 
 //#define MOTIONS_PREPATH			"/home/mul8/Documents/MU-L8_Motion_Files_limb_select/"
-#define TEMP_MOTION_FILE		"/home/mul8/Documents/motions_text_file_select_limbs.mtn"
+#define TEMP_MOTION_FILE		"/home/mul8/Documents/motions_text_file_compliant_joints.mtn"
 #define TEMP_MOTION_QUEUE_FILE	"/home/mul8/Documents/motions_queue_text_file.mtnq"
-#define ZERO_POSE_FILE			"/home/mul8/Documents/MU-L8_Motion_Files_limb_select/zero_pose_file.txt"
-#define MOTIONS_PREPATH	 "/home/mul8/Documents/MU-L8_Motion_Files_limb_select/"
+#define ZERO_POSE_FILE			"/home/mul8/Documents/MU-L8_Motion_Files_compliant_joints/zero_pose_file.txt"
+#define MOTIONS_PREPATH	 "/home/mul8/Documents/MU-L8_Motion_Files_compliant_joints/"
 #define DATA_PREPATH	 "/home/mul8/Dropbox/MUL8_onboard/Motion_testing/Position_testing/"
 
 
@@ -58,8 +58,8 @@
 #define PRESENT_POSITION		36
 #define RETURN_DELAY_TIME		5
 #define STATUS_RETURN_LEVEL		16
-#define MAX_TORQUE				14
-#define TORQUE_LIMIT			34
+#define DEFAULT_MAX_TORQUE		1023
+#define MAX_TORQUE				34
 
 #define BYTE					1
 #define WORD					2
@@ -161,7 +161,7 @@ struct Motion {
 	int length;			//number of steps in a motion				//Integer representing the size of the arrays
 	int num_motors;
 	int limb_select;
-	std::vector<std::vector<bool> > torqueEnabled;
+	std::vector<std::vector<int> > motorCompliance;
 		//1--> ID 1-18	All
 		//2--> ID 1-12  Legs
 		//3--> ID 1-12(odd) right leg
@@ -266,7 +266,7 @@ public:
 	bool addMotionQueue(std::string); //add a new motion queue to be filled with motion names
 	void addMotionToQueue(std::string);
 	void setTorqueLimit(int, int);
-	void chooseCompliantLimb(int, int);
+	void chooseCompliantLimb(int, int, int);
 	void setCompliantLimb(int);
 
 	void decrementQueueIndex(void);

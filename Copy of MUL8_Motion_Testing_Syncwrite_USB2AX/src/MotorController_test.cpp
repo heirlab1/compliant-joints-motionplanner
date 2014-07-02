@@ -281,23 +281,22 @@ void motionTesting() {
 			}
 			else if (input == "cmp" || input == "CMP") {
 
-				std::cout <<"During which step should the motors be compliant?   ";
 				std::string tempinput;
+				std::cout <<"Enter STEP:  ";
 				cin >> tempinput;
 				int step = 0;
 				std::stringstream(tempinput) >> step;
 
-				std::cout <<"Which leg should be compliant? 1= left, 2= right  ";
+				std::cout <<"Enter MOTOR NUMBER:  ";
 				cin >> tempinput;
-				int limb = 0;
-				std::stringstream(tempinput) >> limb;
-				motorController.chooseCompliantLimb(step, limb);
+				int motorID = 0;
+				std::stringstream(tempinput) >> motorID;
 
 				std::cout <<"Enter compliance (0= no resist   1023= max resist):  ";
 				cin >> tempinput;
-				int compliancy = 0;
+				int compliancy = 1023;
 				std::stringstream(tempinput) >> compliancy;
-				motorController.setCompliantLimb(compliancy);
+				motorController.chooseCompliantLimb(step, motorID, compliancy);
 
 			}
 			else if (input == "r" || input == "R") {
