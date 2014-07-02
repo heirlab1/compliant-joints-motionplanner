@@ -161,6 +161,7 @@ struct Motion {
 	int length;			//number of steps in a motion				//Integer representing the size of the arrays
 	int num_motors;
 	int limb_select;
+	std::vector<std::vector<bool> > torqueEnabled;
 		//1--> ID 1-18	All
 		//2--> ID 1-12  Legs
 		//3--> ID 1-12(odd) right leg
@@ -264,6 +265,9 @@ public:
 	void setLimbSelection(int);
 	bool addMotionQueue(std::string); //add a new motion queue to be filled with motion names
 	void addMotionToQueue(std::string);
+	void setTorqueLimit(int, int);
+	void chooseCompliantLimb(int, int);
+	void setCompliantLimb(int);
 
 	void decrementQueueIndex(void);
 	void incrementQueueIndex(void);

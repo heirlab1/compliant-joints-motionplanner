@@ -37,6 +37,7 @@ int mirrorSigns[]= {1, -1,  1, -1, -1, 1, -1, 1, 1, 1, 1, -1};
 int mirroredPose[NUM_MOTORS];
 std::vector<int> currentPose;
 
+int currentTorque= 1023;	//0-1023
 std::string currentMotion = "";
 std::string currentMotionQueue = "";
 
@@ -320,6 +321,7 @@ Motion MotorController::getInitializedMotion(std::string motion_file, std::strin
 	tempMotion.motorIDs.resize(numSteps);
 	tempMotion.time.resize(numSteps);
 	tempMotion.torqueReadings.resize(numSteps);
+	tempMotion.torqueEnabled.resize(numSteps);
 
 	// Loop through the second position and velocity vectors, setting their size equal to the number of motors
 	for (int i = 0; i < numSteps; i++)
@@ -328,6 +330,7 @@ Motion MotorController::getInitializedMotion(std::string motion_file, std::strin
 		tempMotion.motorVelocities[i].resize(tempMotion.num_motors);
 		tempMotion.motorIDs[i].resize(tempMotion.num_motors);
 		tempMotion.torqueReadings[i].resize(tempMotion.num_motors);
+		tempMotion.torqueEnabled[i].resize(tempMotion.num_motors); //TODO unless testing, torque should be 100%
 
 	}
 	//std::cout << "Motion motor vectors were resized" <<std::endl;
@@ -541,12 +544,28 @@ void MotorController::executeNext(Motion motion) {
 			sendSyncWrite(motors, GOAL_ACCELERATION, WORD, data);
 		}
 
+
 		for (int i = 0; i < motion.num_motors; i++) {
 			data[i] = motion.motorVelocities[motion.currentIndex][i];
 		}
 		sendSyncWrite(motors,  MOVING_SPEED, WORD, data);
 
-		// Write the goal positions to each of the motors
+		//TODO for setting compliancy in the motors
+
+		for (int i = 0; i < motion.num_motors; i++) {
+			if(motion.torqueEnabled[motion.currentIndex][i])
+			{
+				setTorqueLimit(motion.motorIDs[motion.currentIndex][i], currentTorque);
+				std::cout<<"Setting Motor "<<motion.motorIDs[motion.currentIndex][i]<<" to be compliant. "<<currentTorque<< " of 1023"<<std::endl;
+			}
+			else
+			{
+				setTorqueLimit(motion.motorIDs[motion.currentIndex][i], 1023);
+				std::cout<<"Setting Motor "<<motion.motorIDs[motion.currentIndex][i]<<" to be default compliancy"<<std::endl;
+			}
+
+		}
+
 		// TODO Change this so it includes the whole body
 
 		for (int i = 0; i < motion.num_motors; i++) {
@@ -1343,7 +1362,34 @@ int MotorController::convDegrees(int pos, int index){
 	return degrees;
 }
 
+void MotorController::chooseCompliantLimb(int step, int limb){
+	int rightleg[]= {3, 5, 7, 9, 11};
+	int leftleg[]= {4, 6, 8, 10, 12};
 
+	switch(limb){
+	case 1:
+		for(int i= 0; i<5; i++){
+			currMo.torqueEnabled[step][leftleg[i]-1]= true;
+		}
+
+		break;
+	case 2:
+		for(int i= 0; i<5; i++){
+			currMo.torqueEnabled[step][rightleg[i]-1]= true;
+		}
+		break;
+	default:
+		break;
+
+	}
+}
+
+void MotorController::setCompliantLimb(int compliancy){
+	currentTorque= compliancy;
+}
+void MotorController::setTorqueLimit(int id, int torque) {		//set new torque limits
+	dxl_write_word(id, TORQUE_LIMIT, torque);
+}
 void MotorController::disableMotor(int motor) {
 	dxl_write_byte(motor, TORQUE_ENABLE, 0);
 }
