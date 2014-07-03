@@ -558,7 +558,7 @@ void MotorController::executeNext(Motion motion) {
 //			//try changing the torque back to something less abrupt
 //			}
 			data[i] = motion.motorCompliance[motion.currentIndex][i];
-			std::cout<<"Setting Motor "<<motion.motorIDs[motion.currentIndex][i]<<" to be compliant. "<<motion.motorCompliance[motion.currentIndex][i]<< " of 1023"<<std::endl;
+//			std::cout<<"Setting Motor "<<motion.motorIDs[motion.currentIndex][i]<<" to be compliant. "<<motion.motorCompliance[motion.currentIndex][i]<< " of 1023"<<std::endl;
 
 		}
 		sendSyncWrite(motors, MAX_TORQUE, WORD, data);
@@ -580,18 +580,18 @@ void MotorController::executeNext(Motion motion) {
 	/*show results of the step. Did the motors go where they were supposed to? also show the speeds. formatted for easy reading*/
 	for (int i = 0; i < motion.num_motors; i++) {
 		if(i<9){
-			std::cout <<"Motor  "<< motion.motorIDs[motion.currentIndex][i]<< "  Goal Position: " <<data[i]<<"\tActual Position: "<< getMotorPositionReadWord(i+1);
-			std::cout<<"\tSpeed: "<<motion.motorVelocities[motion.currentIndex][i]<< std::endl;
+//			std::cout <<"Motor  "<< motion.motorIDs[motion.currentIndex][i]<< "  Goal Position: " <<data[i]<<"\tActual Position: "<< getMotorPositionReadWord(i+1);
+//			std::cout<<"\tSpeed: "<<motion.motorVelocities[motion.currentIndex][i]<< std::endl;
 		}
 		else{
-			std::cout <<"Motor "<< motion.motorIDs[motion.currentIndex][i]<< "  Goal Position:  " <<data[i]<<"\tActual Position: "<< getMotorPositionReadWord(i+1);
-			std::cout <<"\tSpeed: "<<motion.motorVelocities[motion.currentIndex][i]<< std::endl;
+//			std::cout <<"Motor "<< motion.motorIDs[motion.currentIndex][i]<< "  Goal Position:  " <<data[i]<<"\tActual Position: "<< getMotorPositionReadWord(i+1);
+//			std::cout <<"\tSpeed: "<<motion.motorVelocities[motion.currentIndex][i]<< std::endl;
 
 		}
 	}
 	for(int i= 0; i < active_joints; i++ ){
 		if(i==0){
-			std::cout<<"\n"<< motors.size() <<" ACTIVE JOINTS! "<<std::endl;
+//			std::cout<<"\n"<< motors.size() <<" ACTIVE JOINTS! "<<std::endl;
 		}
 		std::cout<<" "<<motors[i];
 	}
