@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
 			motionTesting();
 			MotionTesting = true;
 		}
+
 		else if (input == "M" || input == "m") {
 
 			std::cout << "Please enter name of motion queue: 	" << std::endl;
@@ -180,6 +181,7 @@ void motionTesting() {
 			motorController.mirrorCurrentMotion();
 		}
 
+
 		else{
 			cout << "Please enter a valid input" << endl;
 			motionTestingDone = true;
@@ -246,7 +248,22 @@ void motionTesting() {
 					}
 				}
 			}
+			else if(input == "calib"){
+				std::cout << "Please enter motor number: 	" << std::endl;
+				std::string tempinput;
+				cin >> tempinput;
+				int motor = 0;
+				std::stringstream(tempinput) >> motor;
 
+				std::cout << "Please enter amount to adjust (- for CW): 	" << std::endl;
+				cin >> tempinput;
+				int adjust = 0;
+				std::stringstream(tempinput) >> adjust;
+
+				motorController.calibrateMotor(motor, adjust);
+
+
+			}
 			else if (input == "l" || input == "L") {
 
 				motorController.executePrevious();

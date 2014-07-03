@@ -87,7 +87,7 @@ void MotorController::initialize() {
 	lastClock = clock();
 	batteryClock = clock();
 
-	changePID(32);
+	changePID(P_FOR_PID);
 	setStatusReturnLevel(STATUS_RETURN);
 	setReturnDelayTime();
 	initializeMotions();
@@ -541,6 +541,10 @@ void MotorController::executeNext(Motion motion) {
 				data[i]= SPEED_CONSTANT*abs(dxl_read_word(i+1,PRESENT_POSITION)-finalPos)/.5;
 
 			}
+//			else{
+//				data[i]= SPEED_CONSTANT*abs(dxl_read_word(i+1,PRESENT_POSITION)-motion.motorPositions[currMo.currentIndex][i])/currMo.time[currMo.currentIndex];
+//
+//			}
 			else{
 				data[i] = motion.motorVelocities[motion.currentIndex][i];
 			}
@@ -550,9 +554,10 @@ void MotorController::executeNext(Motion motion) {
 		//TODO for setting compliancy in the motors
 
 		for (int i = 0; i < motion.num_motors; i++) {
+//			if(currMo.currentIndex==0){
+//			//try changing the torque back to something less abrupt
+//			}
 			data[i] = motion.motorCompliance[motion.currentIndex][i];
-			//setTorqueLimit(motion.motorIDs[motion.currentIndex][i], currentTorque);
-
 			std::cout<<"Setting Motor "<<motion.motorIDs[motion.currentIndex][i]<<" to be compliant. "<<motion.motorCompliance[motion.currentIndex][i]<< " of 1023"<<std::endl;
 
 		}
@@ -638,7 +643,7 @@ bool MotorController::step(bool isFalling) {
 			if (currMo.currentIndex == currMo.length)
 			{
 
-				printTorqueReadings();
+				//printTorqueReadings();
 				//TODO check the temp of each motor and the battery level. Battery level is not very accurate
 
 				if(checkBattery==1){
@@ -869,6 +874,16 @@ int MotorController::getMotorPositionReadWord(int id) {
 	return dxl_read_word(id, PRESENT_POSITION);
 }
 
+void MotorController::calibrateMotor(int motor, int adjust){
+	for(int i = 0; i<currMo.length; i++){
+		std::cout<< "Changing Motor "<< motor << " from "<<currMo.motorPositions[i][motor-1];
+		currMo.motorPositions[i][motor-1]+= adjust;
+		std::cout<< "to"  <<currMo.motorPositions[i][motor-1]<<std::endl;
+	}
+	recalculateCurrentMotionSpeeds();
+
+}
+
 void MotorController::getTorqueReadings(){
 
 
@@ -879,7 +894,7 @@ void MotorController::getTorqueReadings(){
 }
 void MotorController::printTorqueReadings(){
 	std::ofstream outFile;
-	std::string extension = currMo.friendlyName +"_position.data";
+	std::string extension = currMo.friendlyName +"_torque.data";
 
 	std::string wholePath = DATA_PREPATH + extension; //show the path of the motion file
 
@@ -890,7 +905,7 @@ void MotorController::printTorqueReadings(){
 	for(int i= 0; i<currMo.num_motors; i++){
 
 		for(int j= 0; j<currMo.length; j++){
-			outFile<< currMo.motorPositions[j][i]<<"\t";
+			outFile<< currMo.torqueReadings[j][i]<<"\t";
 		}
 		outFile<< "\n";
 
@@ -2191,7 +2206,7 @@ void MotorController::recalculateCurrentMotionSpeeds(){
 	int initialPos;
 	int finalPos;
 	for(int i= 0; i<currMo.length; i++){
-		for(int j=0; j<NUM_MOTORS; j++){
+		for(int j=0; j<currMo.num_motors; j++){
 			if(i == 0){
 				currMo.motorVelocities[i][j]= INITIAL_SPEED;
 				std::cout <<"Step "<< currMo.currentIndex<< "...Motor "<< j+1<< " position saved..." <<std::endl;
@@ -2199,9 +2214,9 @@ void MotorController::recalculateCurrentMotionSpeeds(){
 			}
 			else {
 				/*Calaculate speeds to get from one pose to the next*/
-				initialPos= currMo.motorPositions[currMo.currentIndex-1][j];
-				finalPos= currMo.motorPositions[currMo.currentIndex][j];
-				currMo.motorVelocities[currMo.currentIndex][j]= SPEED_CONSTANT*abs(initialPos-finalPos)/currMo.time[currMo.currentIndex];
+				initialPos= currMo.motorPositions[i-1][j];
+				finalPos= currMo.motorPositions[i][j];
+				currMo.motorVelocities[i][j]= SPEED_CONSTANT*abs(initialPos-finalPos)/currMo.time[currMo.currentIndex];
 			}
 		}
 		std::cout <<"Recalculating speed for step "<< i<<std::endl;

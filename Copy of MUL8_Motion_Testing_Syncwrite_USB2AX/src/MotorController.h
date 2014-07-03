@@ -40,7 +40,7 @@
 
 #define DEGREES_PER_POSITION	0.08789
 #define RADIANS_PER_DEGREE		0.01745
-#define P_FOR_PID	32	// Change this value to change the P value
+#define P_FOR_PID	15	// Change this value to change the P value
 #define NEW_RETURN_DELAY_TIME	10
 #define STATUS_RETURN			1	// 0 returns nothing, 1 returns only read, 2 returns everything
 #define LEG_CUTOFF				12
@@ -49,7 +49,7 @@
 #define TORQUE_ENABLE			24
 #define MOVING_SPEED			32
 #define GOAL_ACCELERATION		73
-#define PRESENT_LOAD			41
+#define PRESENT_LOAD			40
 
 #define DEFAULT_MOVING_SPEED	50
 #define DEFAULT_ACCELERATION	15
@@ -251,6 +251,7 @@ public:
 	void mirrorCurrentMotion(void);	//this function will take the mirror the current motion across the sagital plane and save it to a
 										//new file with the <current_motion_name>_m.mtn
 
+	void calibrateMotor(int, int);
 	void setTime(double); //takes new time input and passes it to editStep
 	void setPauseTime(double); //sets the pause time after a motion in the motion queue
 	void changeTime(double);//takes new time input for changing a step's time (without changing positions)
