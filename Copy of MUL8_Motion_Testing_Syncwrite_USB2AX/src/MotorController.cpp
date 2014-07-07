@@ -87,7 +87,7 @@ void MotorController::initialize() {
 	lastClock = clock();
 	batteryClock = clock();
 
-	changePID(P_FOR_PID);
+	//changePID(P_FOR_PID);
 	setStatusReturnLevel(STATUS_RETURN);
 	setReturnDelayTime();
 	initializeMotions();
@@ -538,7 +538,7 @@ void MotorController::executeNext(Motion motion) {
 			if(motion.currentIndex==0){
 
 				int finalPos= motion.motorPositions[0][i];
-				data[i]= SPEED_CONSTANT*abs(dxl_read_word(i+1,PRESENT_POSITION)-finalPos)/.5;
+				data[i]= SPEED_CONSTANT*abs(dxl_read_word(i+1,PRESENT_POSITION)-finalPos)/motion.time[0];
 
 			}
 //			else{
@@ -572,23 +572,6 @@ void MotorController::executeNext(Motion motion) {
 		sendSyncWrite(motors,  GOAL_POSITION, WORD, data);
 	}
 
-	if(motion.currentIndex!=0){
-		std::cout << "Step " << motion.currentIndex-1<< " took " << (float) timeSince((float) lastClock) << " seconds." << std::endl;
-	}
-	std::cout <<"\nStep "<< motion.currentIndex<< " of "<< motion.length-1<< " should take " << motion.time[motion.currentIndex] << " seconds: " <<std::endl;
-
-	/*show results of the step. Did the motors go where they were supposed to? also show the speeds. formatted for easy reading*/
-	for (int i = 0; i < motion.num_motors; i++) {
-		if(i<9){
-//			std::cout <<"Motor  "<< motion.motorIDs[motion.currentIndex][i]<< "  Goal Position: " <<data[i]<<"\tActual Position: "<< getMotorPositionReadWord(i+1);
-//			std::cout<<"\tSpeed: "<<motion.motorVelocities[motion.currentIndex][i]<< std::endl;
-		}
-		else{
-//			std::cout <<"Motor "<< motion.motorIDs[motion.currentIndex][i]<< "  Goal Position:  " <<data[i]<<"\tActual Position: "<< getMotorPositionReadWord(i+1);
-//			std::cout <<"\tSpeed: "<<motion.motorVelocities[motion.currentIndex][i]<< std::endl;
-
-		}
-	}
 	for(int i= 0; i < active_joints; i++ ){
 		if(i==0){
 //			std::cout<<"\n"<< motors.size() <<" ACTIVE JOINTS! "<<std::endl;
@@ -691,6 +674,29 @@ bool MotorController::step(bool isFalling) {
 			{
 
 				checkBattery= 1;	//lets allow the battery to be checked
+
+				//Print the status of the current motion.
+
+				if(currMo.currentIndex!=0){
+					std::cout <<"\nMotion: "<< currMo.friendlyName <<std::endl;
+
+					std::cout << "Step " << currMo.currentIndex-1<< " took " << (float) timeSince((float) lastClock) << " seconds." << std::endl;
+				}
+				std::cout <<"\nStep "<< currMo.currentIndex<< " of "<< currMo.length-1<< " should take " << currMo.time[currMo.currentIndex] << " seconds: " <<std::endl;
+
+				/*show results of the step. Did the motors go where they were supposed to? also show the speeds. formatted for easy reading*/
+				for (int i = 0; i < currMo.num_motors; i++) {
+					int present_position= getMotorPositionReadWord(i+1);
+					if(i<9){
+						std::cout <<"Motor  "<< currMo.motorIDs[currMo.currentIndex][i]<< "  Goal Position: " <<data[i]<<"\tActual Position: "<< present_position<<"\tError: "<<abs(data[i]-present_position);
+						std::cout<<"\tSpeed: "<<currMo.motorVelocities[currMo.currentIndex][i]<< std::endl;
+					}
+					else{
+						std::cout <<"Motor "<< currMo.motorIDs[currMo.currentIndex][i]<< "  Goal Position:  " <<data[i]<<"\tActual Position: "<< present_position<<"\tError: "<<abs(data[i]-present_position);
+						std::cout <<"\tSpeed: "<<currMo.motorVelocities[currMo.currentIndex][i]<< std::endl;
+
+					}
+				}
 				// Execute the next step
 				executeNext(currMo);
 				//getTorqueReadings();
@@ -1370,8 +1376,16 @@ int MotorController::convDegrees(int pos, int index){
 }
 
 void MotorController::chooseCompliantLimb(int step, int motorID, int new_compliance){
-
-	currMo.motorCompliance[step][motorID-1]= new_compliance; //setting for the previous index brings us to the real "currentIndex" because step is incremented in some other
+	if(step== -1 && motorID==-1){
+		for(int i= 0; i<currMo.length; i++){
+			for(int j=0; j<currMo.num_motors; j++){
+				currMo.motorCompliance[i][j]= new_compliance; //setting torque limits for all steps in motion
+			}
+		}
+	}
+	else{
+		currMo.motorCompliance[step][motorID-1]= new_compliance;
+	}
 }
 
 void MotorController::setCompliantLimb(int compliancy){
@@ -1389,9 +1403,17 @@ void MotorController::enableMotor(int motor) {
 	//	std::cout << "Present Position of motor " << motor << ": " << dxl_read_word(motor, PRESENT_POSITION) << std::endl;
 }
 
-void MotorController::changePID(int newPID) {
-	for(int i = 0; i < NUM_LEG_MOTORS + NUM_ARM_MOTORS; i++) {
-		dxl_write_byte(i+1, newPID, P_FOR_PID);
+void MotorController::changePID(int motor, int newPID) {
+	if(motor==0){
+
+		for(int i= 0; i<TOTAL_MOTORS; i++){
+			dxl_write_byte(i+1, newPID, P_FOR_PID);
+		}
+
+	}
+	else{
+
+		dxl_write_byte(motor, newPID, P_FOR_PID);
 	}
 }
 //functions for manipulating the legs
@@ -1949,6 +1971,13 @@ void MotorController::addMotionStep() {
 	for(int j= 0; j< currMo.num_motors; j++){
 		std::cout<<currMo.motorPositions[currMo.currentIndex][j]<<"\t"<<currMo.motorVelocities[currMo.currentIndex][j]<<"\t"<<currMo.motorIDs[currMo.currentIndex][j]<<std::endl;
 	}
+
+}
+
+void MotorController::setMotorLimits(int motor, int CW, int CCW){
+	dxl_write_word(motor, CW_LIMIT, CW);
+	dxl_write_word(motor, CCW_LIMIT, CCW);
+
 
 }
 

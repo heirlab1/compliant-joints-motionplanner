@@ -50,6 +50,9 @@
 #define MOVING_SPEED			32
 #define GOAL_ACCELERATION		73
 #define PRESENT_LOAD			40
+#define CW_LIMIT			6
+#define CCW_LIMIT			8
+
 
 #define DEFAULT_MOVING_SPEED	50
 #define DEFAULT_ACCELERATION	15
@@ -236,7 +239,7 @@ public:
 	void enableRightArm(void);
 	void enableLeftArm(void);
 
-	void changePID(int);
+	void changePID(int, int);
 	int readMotorPosition(int);
 	int mainController(std::string in);
 	int convDegrees(int, int);
@@ -252,6 +255,7 @@ public:
 										//new file with the <current_motion_name>_m.mtn
 
 	void calibrateMotor(int, int);
+	void setMotorLimits(int, int, int);	//sets CCW and Cw limits for motor x
 	void setTime(double); //takes new time input and passes it to editStep
 	void setPauseTime(double); //sets the pause time after a motion in the motion queue
 	void changeTime(double);//takes new time input for changing a step's time (without changing positions)

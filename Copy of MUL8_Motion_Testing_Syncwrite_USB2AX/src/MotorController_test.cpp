@@ -195,6 +195,7 @@ void motionTesting() {
 			std::cout << "aj ------> Add Joints  "<<std::endl;
 			std::cout << "pid ------> Change P gain  "<<std::endl;
 			std::cout << "cmp ------> Set compliancy for limbs"<<std::endl;
+			std::cout << "limits ------> Set CW and CCW for motors"<<std::endl;
 			//std::cout << "d -> Delete current step"<<std::endl;
 			std::cout << "pm ------> Passive Mode (robot will not move)  "<<std::endl;
 			std::cout << "am ------> Active Mode (robot is active) "<<std::endl;
@@ -264,6 +265,27 @@ void motionTesting() {
 
 
 			}
+			else if(input == "limits"){
+				std::cout << "Please enter motor number: 	" << std::endl;
+				std::string tempinput;
+				cin >> tempinput;
+				int motor = 0;
+				std::stringstream(tempinput) >> motor;
+
+				std::cout << "Please enter CW limit: 	" << std::endl;
+				cin >> tempinput;
+				int CW = 0;
+				std::stringstream(tempinput) >> CW;
+
+				std::cout << "Please enter CCW limit: 	" << std::endl;
+				cin >> tempinput;
+				int CCW = 0;
+				std::stringstream(tempinput) >> CCW;
+
+				motorController.setMotorLimits(motor, CW, CCW);
+
+
+			}
 			else if (input == "l" || input == "L") {
 
 				motorController.executePrevious();
@@ -288,23 +310,29 @@ void motionTesting() {
 				motorController.enableMotionExecution();
 			}
 			else if (input == "pid" || input == "PID") {
-				//release single motor
-				std::cout <<"Enter P gain value 0-32:  ";
+
 				std::string tempinput;
+				std::cout <<"Enter Motor number (0 will affect all motors): ";
+				cin >> tempinput;
+				int motor = 0;
+				std::stringstream(tempinput) >> motor;
+
+				std::cout <<"Enter new P gain (0-32): ";
 				cin >> tempinput;
 				int pid = 0;
 				std::stringstream(tempinput) >> pid;
-				motorController.changePID(pid);
+
+				motorController.changePID(motor, pid);
 			}
 			else if (input == "cmp" || input == "CMP") {
 
 				std::string tempinput;
-				std::cout <<"Enter STEP:  ";
+				std::cout <<"Enter STEP (-1 will affect all steps):  ";
 				cin >> tempinput;
 				int step = 0;
 				std::stringstream(tempinput) >> step;
 
-				std::cout <<"Enter MOTOR NUMBER:  ";
+				std::cout <<"Enter MOTOR NUMBER (-1 will affect all motors):  ";
 				cin >> tempinput;
 				int motorID = 0;
 				std::stringstream(tempinput) >> motorID;
