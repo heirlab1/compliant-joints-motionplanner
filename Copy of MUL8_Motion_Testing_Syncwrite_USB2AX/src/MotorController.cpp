@@ -2311,6 +2311,48 @@ void MotorController::displayMotionStatus(){
 	}
 
 }
+void MotorController::displayQueueStatus(){
+
+	std::cout<<"\n";
+
+
+	//point at the current step
+	for(int i=0; i<3; i++){
+		for(int j=0; j<currQueue.currentIndex+1; j++){
+
+			if(j==0){
+			}
+			else if(j== currQueue.currentIndex){
+				if(i==1){
+					std::cout<<"  @\t\n";
+				}
+				else if(i==2){
+					std::cout<<"   \t\n";
+				}
+				else{
+					std::cout<<" <->\t\n";
+				}
+			}
+			else{
+				std::cout<<"\t ";
+			}
+		}
+	}
+	for(int i= 0; i<currQueue.length; i++){
+		std::cout<<currQueue.motionList[i]<<"\t";
+		if(i==currQueue.length-1){
+			std::cout<<"\n";
+		}
+	}
+
+	for(int i= 0; i<currQueue.length; i++){
+		std::cout<<"["<<currQueue.pauseTime[i]<<"]\t";
+		if(i==currQueue.length-1){
+			std::cout<<"\n";
+		}
+	}
+
+}
 
 void MotorController::disableMotionExecution(){
 	//disableAllMotors();	//this will turn off the motors. active mode must be entered

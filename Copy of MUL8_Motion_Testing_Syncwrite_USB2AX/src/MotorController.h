@@ -284,6 +284,7 @@ public:
 
 
 	void displayMotionStatus(void);	//show the user which step we are on in a graphical manner
+	void displayQueueStatus(void);//show the user the state of the queuee that they are making
 	void recalculateCurrentMotionSpeeds(void);
 	void deleteCurrentStep(void);	//manipulate struct to delete step
 

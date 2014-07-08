@@ -722,7 +722,8 @@ void createNewMotionQueue() {
 			std::cout << "n ------> Add next Motion "<<std::endl;
 
 			std::cout << "shift+p -----> Print current Motion " << std::endl;
-			std::cout << "d -----> Done editing motion" << std::endl;
+			std::cout << "d -----> Done editing motion\n" << std::endl;
+			motorController.displayQueueStatus();
 		}
 
 		cin >> input;
@@ -744,6 +745,7 @@ void createNewMotionQueue() {
 			motorController.incrementQueueIndex();
 			motorController.setPauseTime(time);
 			motorController.decrementQueueIndex();
+
 			stepTracker++;
 		}
 
