@@ -2017,6 +2017,8 @@ void MotorController::setLimbSelection(int select_code){
 		currMo.motorPositions[currMo.currentIndex].resize(currMo.num_motors);	//re-adjust the size of the vectors for x motors
 		currMo.motorVelocities[currMo.currentIndex].resize(currMo.num_motors);
 		currMo.motorIDs[currMo.currentIndex].resize(currMo.num_motors);
+		currMo.torqueReadings[currMo.currentIndex].resize(currMo.num_motors);
+
 
 		for(int i=0; i<currMo.num_motors; i++){
 			currMo.motorIDs[currMo.currentIndex][i]= i+1;
@@ -2029,6 +2031,8 @@ void MotorController::setLimbSelection(int select_code){
 		currMo.motorPositions[currMo.currentIndex].resize(currMo.num_motors);	//re-adjust the size of the vectors for x motors
 		currMo.motorVelocities[currMo.currentIndex].resize(currMo.num_motors);
 		currMo.motorIDs[currMo.currentIndex].resize(currMo.num_motors);
+		currMo.torqueReadings[currMo.currentIndex].resize(currMo.num_motors);
+
 
 		for(int i=0; i<currMo.num_motors; i++){
 			currMo.motorIDs[currMo.currentIndex][i]= i+1;
@@ -2041,6 +2045,8 @@ void MotorController::setLimbSelection(int select_code){
 		currMo.motorPositions[currMo.currentIndex].resize(currMo.num_motors);	//re-adjust the size of the vectors for x motors
 		currMo.motorVelocities[currMo.currentIndex].resize(currMo.num_motors);
 		currMo.motorIDs[currMo.currentIndex].resize(currMo.num_motors);
+		currMo.torqueReadings[currMo.currentIndex].resize(currMo.num_motors);
+
 
 		for (int i = 0; i < currMo.num_motors; i++) {
 			currMo.motorIDs[currMo.currentIndex][i] = 2*i + 1;
@@ -2053,6 +2059,8 @@ void MotorController::setLimbSelection(int select_code){
 		currMo.motorPositions[currMo.currentIndex].resize(currMo.num_motors);	//re-adjust the size of the vectors for x motors
 		currMo.motorVelocities[currMo.currentIndex].resize(currMo.num_motors);
 		currMo.motorIDs[currMo.currentIndex].resize(currMo.num_motors);
+		currMo.torqueReadings[currMo.currentIndex].resize(currMo.num_motors);
+
 
 		for (int i = 0; i < currMo.num_motors; i++) {
 			currMo.motorIDs[currMo.currentIndex][i] = 2*i + 2;
@@ -2065,6 +2073,8 @@ void MotorController::setLimbSelection(int select_code){
 		currMo.motorPositions[currMo.currentIndex].resize(currMo.num_motors);	//re-adjust the size of the vectors for x motors
 		currMo.motorVelocities[currMo.currentIndex].resize(currMo.num_motors);
 		currMo.motorIDs[currMo.currentIndex].resize(currMo.num_motors);
+		currMo.torqueReadings[currMo.currentIndex].resize(currMo.num_motors);
+
 
 		for (int i = 0; i < currMo.num_motors; i++) {
 			currMo.motorIDs[currMo.currentIndex][i] = i + 1 + 12;
@@ -2077,6 +2087,8 @@ void MotorController::setLimbSelection(int select_code){
 		currMo.motorPositions[currMo.currentIndex].resize(currMo.num_motors);	//re-adjust the size of the vectors for x motors
 		currMo.motorVelocities[currMo.currentIndex].resize(currMo.num_motors);
 		currMo.motorIDs[currMo.currentIndex].resize(currMo.num_motors);
+		currMo.torqueReadings[currMo.currentIndex].resize(currMo.num_motors);
+
 
 		for (int i = 0; i < currMo.num_motors; i++) {
 			currMo.motorIDs[currMo.currentIndex][i] = 2*i + 1 + 12;
@@ -2089,6 +2101,8 @@ void MotorController::setLimbSelection(int select_code){
 		currMo.motorPositions[currMo.currentIndex].resize(currMo.num_motors);	//re-adjust the size of the vectors for x motors
 		currMo.motorVelocities[currMo.currentIndex].resize(currMo.num_motors);
 		currMo.motorIDs[currMo.currentIndex].resize(currMo.num_motors);
+		currMo.torqueReadings[currMo.currentIndex].resize(currMo.num_motors);
+
 
 		for (int i = 0; i < currMo.num_motors; i++) {
 			currMo.motorIDs[currMo.currentIndex][i] = 2*i + 2 + 12;
@@ -2101,6 +2115,8 @@ void MotorController::setLimbSelection(int select_code){
 		currMo.motorPositions[currMo.currentIndex].resize(currMo.num_motors);	//re-adjust the size of the vectors for x motors
 		currMo.motorVelocities[currMo.currentIndex].resize(currMo.num_motors);
 		currMo.motorIDs[currMo.currentIndex].resize(currMo.num_motors);
+		currMo.torqueReadings[currMo.currentIndex].resize(currMo.num_motors);
+
 
 		for (int i = 0; i < 2; i++) {
 			currMo.motorIDs[currMo.currentIndex][i] = i + 23;
@@ -2117,6 +2133,8 @@ void MotorController::setLimbSelection(int select_code){
 				currMo.motorPositions[i].resize(currMo.num_motors);	//re-adjust the size of the vectors for x motors
 				currMo.motorVelocities[i].resize(currMo.num_motors);
 				currMo.motorIDs[i].resize(currMo.num_motors);
+				currMo.torqueReadings[i].resize(currMo.num_motors);
+
 			}
 			//these conditionals will assign the correct IDs in the correct location in the vector
 
@@ -2161,6 +2179,8 @@ void MotorController::setLimbSelection(int select_code){
 				currMo.motorPositions[i].resize(currMo.num_motors);	//re-adjust the size of the vectors for x motors
 				currMo.motorVelocities[i].resize(currMo.num_motors);
 				currMo.motorIDs[i].resize(currMo.num_motors);
+				currMo.torqueReadings[i].resize(currMo.num_motors);
+
 			}
 
 			//these conditionals will assign the correct IDs in the correct location in the vector
