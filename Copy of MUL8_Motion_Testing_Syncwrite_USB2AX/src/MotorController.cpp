@@ -1483,6 +1483,19 @@ void MotorController::disableSwayMotors() {
 }
 
 //functions for manipulating the arms
+void MotorController::disableArms() {
+	std::vector<int>  leftArm;
+	leftArm.resize(NUM_ARM_MOTORS);
+	std::vector<int> datas;
+	datas.resize(NUM_ARM_MOTORS);
+	for (int i = 0; i < NUM_ARM_MOTORS; i++) {
+		leftArm[i] = 13+i;
+		datas[i] = 0;
+	}
+	std::cout<<"RELEASING LEFT ARM"<<std::endl;
+	sendSyncWrite(leftArm,  TORQUE_ENABLE, BYTE, datas);
+}
+//functions for manipulating the arms
 void MotorController::disableLeftArm() {
 	std::vector<int>  leftArm;
 	leftArm.resize(NUM_ARM_MOTORS/2);
@@ -1509,6 +1522,18 @@ void MotorController::disableRightArm() {
 	sendSyncWrite(rightArm,  TORQUE_ENABLE, BYTE, datas);
 }
 
+void MotorController::enableArms() {
+	std::vector<int>  leftArm;
+	leftArm.resize(NUM_ARM_MOTORS);
+	std::vector<int> datas;
+	datas.resize(NUM_ARM_MOTORS);
+	for (int i = 0; i < NUM_ARM_MOTORS; i++) {
+		leftArm[i] = 13+i;
+		datas[i] = 1;
+	}
+	std::cout<<"RELEASING LEFT ARM"<<std::endl;
+	sendSyncWrite(leftArm,  TORQUE_ENABLE, BYTE, datas);
+}
 void MotorController::enableRightArm() {
 	std::vector<int>  rightArm;
 	rightArm.resize(NUM_ARM_MOTORS/2);

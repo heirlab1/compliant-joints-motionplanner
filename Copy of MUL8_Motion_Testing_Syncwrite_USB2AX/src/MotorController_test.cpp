@@ -196,6 +196,8 @@ void motionTesting() {
 			std::cout << "pid ------> Change P gain  "<<std::endl;
 			std::cout << "cmp ------> Set compliancy for limbs"<<std::endl;
 			std::cout << "limits ------> Set CW and CCW for motors"<<std::endl;
+			std::cout << "calib ------> Adjust Motor Positions Manually"<<std::endl;
+
 			//std::cout << "d -> Delete current step"<<std::endl;
 			std::cout << "pm ------> Passive Mode (robot will not move)  "<<std::endl;
 			std::cout << "am ------> Active Mode (robot is active) "<<std::endl;
@@ -205,7 +207,7 @@ void motionTesting() {
 			std::cout << "ra -----> Release *ALL* Motors     \trrl -----> Release Right Leg\terl -----> Enable Right Leg " << std::endl;
 			std::cout << "e ------> Engage *SINGLE* Motor    \trla -----> Release Left Arm\tela -----> Enable Left Arm " << std::endl;
 			std::cout << "ea -----> Engage *ALL* Motors      \trra -----> Release Right Arm\tera -----> Enable Right Arm " << std::endl;
-			std::cout << "rs -----> Release Sway Motors (hip shifting motors)" << std::endl;
+			std::cout << "eaa -----> Engage All Arm Motors   \traa -----> Release All Arm Motors\t\nrs -----> Release Sway Motors (hip shifting motors)" << std::endl;
 			std::cout << "\n";
 
 			std::cout << "rp -----> Read Position " << std::endl;
@@ -249,7 +251,7 @@ void motionTesting() {
 					}
 				}
 			}
-			else if(input == "calib"){
+			else if(input == "calib" || input == "CALIB"){
 				std::cout << "Please enter motor number: 	" << std::endl;
 				std::string tempinput;
 				cin >> tempinput;
@@ -265,7 +267,7 @@ void motionTesting() {
 
 
 			}
-			else if(input == "limits"){
+			else if(input == "limits" || input == "LIMITS"){
 				std::cout << "Please enter motor number: 	" << std::endl;
 				std::string tempinput;
 				cin >> tempinput;
@@ -412,12 +414,17 @@ void motionTesting() {
 				motorController.disableSwayMotors();
 			}
 
-
+			else if (input == "eaa" || input == "EAA") {
+				motorController.enableArms();
+			}
 			else if (input == "era" || input == "ERA") {
 				motorController.enableRightArm();
 			}
 			else if (input == "ela" || input == "ELA") {
 				motorController.enableLeftArm();
+			}
+			else if (input == "raa" || input == "RAA") {
+				motorController.disableArms();
 			}
 			else if (input == "rra" || input == "RRA") {
 				motorController.disableRightArm();
