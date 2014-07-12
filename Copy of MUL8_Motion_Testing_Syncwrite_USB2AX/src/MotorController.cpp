@@ -634,7 +634,7 @@ bool MotorController::step(bool isFalling) {
 					dxl_write_byte(23, TORQUE_ENABLE, 0); //for neck pan motor disable torque
 					double batteryCheckSamples=5;
 					for(int i = 0; i<batteryCheckSamples; i++){
-						batteryLevel+= (double) (dxl_read_byte(23, 42)*.1);
+						batteryLevel+= (double) ((dxl_read_byte(23, 42)*.1)-.2);
 					}
 
 					std::cout <<std::endl<< "Battery Voltage ~ ";
@@ -2300,8 +2300,18 @@ void MotorController::recalculateCurrentMotionSpeeds(){
 
 
 void MotorController::displayMotionStatus(){
+	batteryLevel=0; //start fresh
+	dxl_write_byte(23, TORQUE_ENABLE, 0); //for neck pan motor disable torque
+	double batteryCheckSamples=5;
+	for(int i = 0; i<batteryCheckSamples; i++){
+		batteryLevel+= (double) ((dxl_read_byte(23, 42)*.1)-.2);
+	}
 
+	std::cout << "\nSensed Battery Voltage = ";
+	std::cout.setf( std::ios::fixed, std:: ios::floatfield ); // floatfield set to fixed
+	std::cout << batteryLevel/batteryCheckSamples << "\n";
 	std::cout<<"\n";
+
 	if(!motionExecutionDisabled){
 		std::cout<<"RECORDING MOTORS";
 		for(int i=0; i<currMo.num_motors; i++){
