@@ -546,9 +546,16 @@ void MotorController::executeNext(Motion motion) {
 		}
 
 
+		if(motion.friendlyName == "Tl15" || motion.friendlyName == "Tl30" || motion.friendlyName == "Tl45" || motion.friendlyName == "Tr15" || motion.friendlyName == "Tr30" || motion.friendlyName == "Tr45" ){
+			if(motion.currentIndex==4){//this is the part when it falls back to recover after making the turn
 
-		if(motion.currentIndex==0){
-			std::cout<<"Using balance slowdown of "<<balance_slowdown<<std::endl;
+				for(int j=0; j<motion.num_motors; j++){
+					data[j]= SPEED_CONSTANT*abs(currMo.motorPositions[motion.currentIndex-1][j]-currMo.motorPositions[motion.currentIndex][j])/(currMo.time[currMo.currentIndex]+balance_slowdown);
+				}
+			}
+		}
+		else if(motion.currentIndex==0){
+			std::cout<<"#####SLOW DOWN: "<<balance_slowdown<<std::endl;
 
 			for (int i = 0; i < motion.num_motors; i++) {
 
@@ -764,62 +771,36 @@ void MotorController::correctBalance(int y_accel){
 		}
 		//if leaning to the right, incrementally adjust balance
 		else if(previous_balance<=10 ){
-			printf("got to right side");
+//			printf("got to right side");
 			if(y_accel<8){
 				previous_balance=y_accel;
+				if(currentMotion=="Tr15" || currentMotion=="Tr30" || currentMotion=="Tr45"){
+					balance_slowdown=.2;
+				}
+				else{
 				balance_slowdown=.6;
+				}
 
 			}
-//			if(y_accel<previous_balance){
-//				printf("leaning more now");
-//				switch(y_accel){
-//				case 4:
-//					previous_balance=y_accel;
-//					balance_slowdown=.8;	//closer to tipping
-//					break;
-//				case 5:
-//					previous_balance=y_accel;
-//					balance_slowdown=.5;
-//					break;
-//				case 6:
-//					previous_balance=y_accel;
-//					balance_slowdown=.2;	//more balanced
-//					break;
-//				}
-//			}
+
 	}
 		//if leaning to the left
 		else if(previous_balance>=10 ){
-			printf("got to left side");
+//			printf("got to left side");
 			if(y_accel>11){
+
 				previous_balance=y_accel;
+				if(currentMotion=="Tl15" || currentMotion=="Tl30" || currentMotion=="Tl45"){
+					balance_slowdown=.2;
+				}
+				else{
 				balance_slowdown=.6;
+				}
 
 			}
 
-//			if(y_accel>previous_balance){
-//				switch(y_accel){
-//				case 14:
-//					previous_balance=y_accel;
-//					balance_slowdown=.2;	//more balanced
-//					break;
-//				case 15:
-//					previous_balance=y_accel;
-//					balance_slowdown=.5;
-//					break;
-//				case 16:
-//					previous_balance=y_accel;
-//					balance_slowdown=.8;	//closer to tipping
-//					break;
-//				}
-//			}
 	}
-//
-//		else if(y_accel == 4 || y_accel == 5 || y_accel == 6 || y_accel == 14 || y_accel == 15 || y_accel == 16){
-//			//robot is off balanced but maybe not falling yet
-//				balance_slowdown= .8;	//slow down the first step of the next motion
-//
-//		}
+
 	}
 }
 /**
