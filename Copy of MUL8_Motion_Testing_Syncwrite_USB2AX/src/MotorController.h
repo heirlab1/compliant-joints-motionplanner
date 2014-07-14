@@ -281,7 +281,7 @@ public:
 	int getQueueLength(void);
 	int getQueuePause(void);
 
-
+	void correctBalance(int);//to be used with android app
 
 	void displayMotionStatus(void);	//show the user which step we are on in a graphical manner
 	void displayQueueStatus(void);//show the user the state of the queuee that they are making

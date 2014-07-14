@@ -7,6 +7,7 @@
 
 /*Belongs to MotionPlanner*/
 #include "MotorController.h"
+#include "balanceServer.h"
 #include <string>
 #include <sstream>
 #include <stdlib.h>
@@ -55,6 +56,9 @@ int temperature= 0;
 int checkBattery;
 int result;
 
+
+double balance_slowdown= 0;
+
 std::vector<int> motors;
 std::vector<int> data;
 
@@ -62,6 +66,8 @@ std::vector<int> data;
 MotorController::MotorController() {
 	// Initialize USB2Dynamixel
 	//	motor_dynamixel.dxl_initialize(0,1);
+
+
 	dxl_initialize(0,1);
 	//Initialize the motors
 	initialize();
@@ -75,6 +81,8 @@ MotorController::MotorController() {
 	}
 	//std::cout<<"resized motors array"<<std::endl;
 	data.resize(TOTAL_MOTORS);
+
+
 	//std::cout<<"resized data for syncwrite array"<<std::endl;
 }
 
@@ -534,20 +542,24 @@ void MotorController::executeNext(Motion motion) {
 		}
 
 
-		for (int i = 0; i < motion.num_motors; i++) {
-			if(motion.currentIndex==0){
+
+		if(motion.currentIndex==0){
+			std::cout<<"Using balance slowdown of "<<balance_slowdown<<std::endl;
+
+			for (int i = 0; i < motion.num_motors; i++) {
 
 				int finalPos= motion.motorPositions[0][i];
-				data[i]= SPEED_CONSTANT*abs(dxl_read_word(i+1,PRESENT_POSITION)-finalPos)/motion.time[0];
-
+				data[i]= SPEED_CONSTANT*abs(dxl_read_word(i+1,PRESENT_POSITION)-finalPos)/(motion.time[0]+balance_slowdown); //find proper motor speeds to meet the time of the first step+ balance offset
 			}
-//			else{
-//				data[i]= SPEED_CONSTANT*abs(dxl_read_word(i+1,PRESENT_POSITION)-motion.motorPositions[currMo.currentIndex][i])/currMo.time[currMo.currentIndex];
-//
-//			}
-			else{
+			balance_slowdown = 0;	//after the balance offset has been applied to this motion, set it back to zero- start fresh
+		}
+
+		else{
+			for (int i = 0; i < motion.num_motors; i++) {
+
 				data[i] = motion.motorVelocities[motion.currentIndex][i];
 			}
+
 		}
 		sendSyncWrite(motors,  MOVING_SPEED, WORD, data);
 
@@ -594,7 +606,7 @@ void MotorController::executeNext(Motion motion) {
 bool MotorController::step(bool isFalling) {
 	// TODO Add error checking to see if robot has fallen
 	// If it hasint  fallen, make sure that it's currently standing steady
-
+	balanceServer balance_server;
 	// What we are going to return
 	bool returnVar = false;
 
@@ -617,6 +629,7 @@ bool MotorController::step(bool isFalling) {
 	}
 	else //do this is if robot is not falling
 	{
+
 		motions_iterator = motions.find(currentMotion);
 		// If it's been longer than the time we have to wait, let's do the next movement or step
 		if (timeSince((float)lastClock) >= currMo.time[currMo.currentIndex-1])
@@ -698,6 +711,7 @@ bool MotorController::step(bool isFalling) {
 					}
 				}
 				// Execute the next step
+				correctBalance(balance_server.checkBalance());
 				executeNext(currMo);
 				//getTorqueReadings();
 				// Increment the motion counter
@@ -708,8 +722,33 @@ bool MotorController::step(bool isFalling) {
 			return returnVar;
 		}
 
+		//correctBalance(balance_server.checkBalance());
 		return returnVar;
 
+	}
+}
+void MotorController::correctBalance(int y_accel){
+	balance_slowdown= 0;
+	if(y_accel<4 && y_accel>16){
+		//robot is falling
+		//step(true); disable all motors or set torque to 0 for all, let robot fall
+	}
+	else if(y_accel== 0){//server not working
+
+		return;
+	}
+
+	else if(currentMotion == "W0_m" || currentMotion == "W1" || currentMotion == "W2" || currentMotion == "W1i" || currentMotion == "W2i"){
+
+		if(y_accel> 6 && y_accel<14){	//robot is relatively balanced
+			//do nothing?
+		}
+
+		else if(y_accel == 4 || y_accel == 5 || y_accel == 6 || y_accel == 14 || y_accel == 15 || y_accel == 16){
+			//robot is off balanced but maybe not falling yet
+				balance_slowdown= .8;	//slow down the first step of the next motion
+
+		}
 	}
 }
 /**
