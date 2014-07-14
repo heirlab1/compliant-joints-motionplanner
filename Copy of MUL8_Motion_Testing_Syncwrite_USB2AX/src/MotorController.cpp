@@ -72,7 +72,7 @@ MotorController::MotorController() {
 
 	dxl_initialize(0,1);
 	//Initialize the motors
-	balance_server.init();
+
 	initialize();
 
 	// Set the current motion to standing
@@ -546,7 +546,7 @@ void MotorController::executeNext(Motion motion) {
 		}
 
 
-		if(motion.friendlyName == "Tl15" || motion.friendlyName == "Tl30" || motion.friendlyName == "Tl45" || motion.friendlyName == "Tr15" || motion.friendlyName == "Tr30" || motion.friendlyName == "Tr45" ){
+		if(currentMotion == "Tl15" || currentMotion == "Tl30" || currentMotion == "Tl45" || currentMotion == "Tr15" || currentMotion == "Tr30" || currentMotion == "Tr45" ){
 			if(motion.currentIndex==4){//this is the part when it falls back to recover after making the turn
 
 				for(int j=0; j<motion.num_motors; j++){
@@ -752,7 +752,7 @@ bool MotorController::step(bool isFalling) {
 }
 void MotorController::correctBalance(int y_accel){
 	balance_slowdown= 0;
-//	previous_balance= y_accel;
+	//	previous_balance= y_accel;
 
 	if(y_accel<5 && y_accel>14){
 		//robot is falling
@@ -771,22 +771,22 @@ void MotorController::correctBalance(int y_accel){
 		}
 		//if leaning to the right, incrementally adjust balance
 		else if(previous_balance<=10 ){
-//			printf("got to right side");
+			//			printf("got to right side");
 			if(y_accel<8){
 				previous_balance=y_accel;
 				if(currentMotion=="Tr15" || currentMotion=="Tr30" || currentMotion=="Tr45"){
 					balance_slowdown=.2;
 				}
 				else{
-				balance_slowdown=.6;
+					balance_slowdown=.6;
 				}
 
 			}
 
-	}
+		}
 		//if leaning to the left
 		else if(previous_balance>=10 ){
-//			printf("got to left side");
+			//			printf("got to left side");
 			if(y_accel>11){
 
 				previous_balance=y_accel;
@@ -794,12 +794,12 @@ void MotorController::correctBalance(int y_accel){
 					balance_slowdown=.2;
 				}
 				else{
-				balance_slowdown=.6;
+					balance_slowdown=.6;
 				}
 
 			}
 
-	}
+		}
 
 	}
 }
