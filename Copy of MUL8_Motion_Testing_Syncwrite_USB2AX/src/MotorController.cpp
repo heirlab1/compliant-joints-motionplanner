@@ -22,6 +22,7 @@
 
 #include <dynamixel.h>
 
+balanceServer balance_server;
 bool motionExecutionDisabled= false;
 
 clock_t lastClock, batteryClock;
@@ -56,8 +57,9 @@ int temperature= 0;
 int checkBattery;
 int result;
 
-
+int balance_updates=0;
 double balance_slowdown= 0;
+int previous_balance= 10;
 
 std::vector<int> motors;
 std::vector<int> data;
@@ -70,7 +72,9 @@ MotorController::MotorController() {
 
 	dxl_initialize(0,1);
 	//Initialize the motors
+	balance_server.init();
 	initialize();
+
 	// Set the current motion to standing
 	currentMotion = "Stand";
 
@@ -166,12 +170,12 @@ void MotorController::initializeMotions() {
 		// Push the first number into the motor position. In [i=rows][j=columns], i is the step number of the motion we're in and j is the motor number
 		machineNames[i] = /*MOTIONS_PREPATH + */temp.substr(0, space);
 
-		std::cout << "Motion Path:\n\t" << machineNames[i] << std::endl;
+		//std::cout << "Motion Path:\n\t" << machineNames[i] << std::endl;
 
 		// Push the second number into the velocity position
 		friendlyNames[i] = temp.substr(space+1);
 
-		std::cout << "Friendly Name:\n\t" << friendlyNames[i] << std::endl;
+		//std::cout << "Friendly Name:\n\t" << friendlyNames[i] << std::endl;
 
 		// This way allows the motions to be overwritten, useful when adding new motions and re-initializing.
 		//here the parameters are the real file path and the friendly name for that file
@@ -243,12 +247,12 @@ void MotorController::initializeMotionQueues(){
 		// Push the first name into the machine name column.  i is the step number of the motion we're in
 		machineQueueNames[i] = /*MOTIONS_PREPATH + */temp.substr(0, space);
 
-		std::cout << "Motion Queue Path:\n\t" << machineQueueNames[i] << std::endl;
+		//std::cout << "Motion Queue Path:\n\t" << machineQueueNames[i] << std::endl;
 
 		// Push the second number into the velocity position
 		friendlyQueueNames[i] = temp.substr(space+1);
 
-		std::cout << "Friendly Queue Name:\n\t" << friendlyQueueNames[i] << std::endl;
+		//std::cout << "Friendly Queue Name:\n\t" << friendlyQueueNames[i] << std::endl;
 
 		// This way allows the motions to be overwritten, useful when adding new motions and re-initializing
 		motionQueues[friendlyQueueNames[i]] = getInitializedMotionQueue((std::string)(MOTIONS_PREPATH) + machineQueueNames[i], friendlyQueueNames[i]);
@@ -315,8 +319,8 @@ Motion MotorController::getInitializedMotion(std::string motion_file, std::strin
 	std::stringstream(aString) >> tempMotion.num_motors;
 
 
-	std::cout << "Motion Contains "<< tempMotion.num_motors << " motors" <<std::endl;
-	std::cout << "Motion Contains "<< numSteps << " steps" <<std::endl;
+	//std::cout << "Motion Contains "<< tempMotion.num_motors << " motors" <<std::endl;
+	//std::cout << "Motion Contains "<< numSteps << " steps" <<std::endl;
 
 
 	tempMotion.friendlyName = friendlyName;
@@ -438,7 +442,7 @@ MotionQueue MotorController::getInitializedMotionQueue(std::string motion_queue_
 	getline(file, aString);				// The first number in the file is the total number of steps
 	std::stringstream(aString)>>numMotions;
 
-	std::cout << "Queue Contains "<< numMotions << " steps" <<std::endl;
+	//std::cout << "Queue Contains "<< numMotions << " steps" <<std::endl;
 
 	tempMotionQueue.friendlyName = friendlyQueueName;
 
@@ -470,9 +474,9 @@ MotionQueue MotorController::getInitializedMotionQueue(std::string motion_queue_
 		// Push the second number into the velocity position
 		std::stringstream(aString.substr(space+1)) >> tempMotionQueue.pauseTime[i];
 
-		std::cout << "Motion "<< i << " added" <<std::endl;
+	//	std::cout << "Motion "<< i << " added" <<std::endl;
 	}
-	std::cout << "Queue Built ^\n "<<std::endl;
+//	std::cout << "Queue Built ^\n "<<std::endl;
 	// Close the text file
 	file.close();
 
@@ -549,9 +553,16 @@ void MotorController::executeNext(Motion motion) {
 			for (int i = 0; i < motion.num_motors; i++) {
 
 				int finalPos= motion.motorPositions[0][i];
-				data[i]= SPEED_CONSTANT*abs(dxl_read_word(i+1,PRESENT_POSITION)-finalPos)/(motion.time[0]+balance_slowdown); //find proper motor speeds to meet the time of the first step+ balance offset
+				data[i]= SPEED_CONSTANT*abs(dxl_read_word(i+1,PRESENT_POSITION)-finalPos)/(motion.time[0]);//+balance_slowdown); //find proper motor speeds to meet the time of the first step+ balance offset
 			}
 			balance_slowdown = 0;	//after the balance offset has been applied to this motion, set it back to zero- start fresh
+		}
+
+		else if(motion.currentIndex==1){
+
+			for(int j=0; j<motion.num_motors; j++){
+				data[j]= SPEED_CONSTANT*abs(currMo.motorPositions[motion.currentIndex-1][j]-currMo.motorPositions[motion.currentIndex][j])/(currMo.time[currMo.currentIndex]+balance_slowdown);
+			}
 		}
 
 		else{
@@ -606,7 +617,8 @@ void MotorController::executeNext(Motion motion) {
 bool MotorController::step(bool isFalling) {
 	// TODO Add error checking to see if robot has fallen
 	// If it hasint  fallen, make sure that it's currently standing steady
-	balanceServer balance_server;
+//	balanceServer balance_server;
+
 	// What we are going to return
 	bool returnVar = false;
 
@@ -634,6 +646,7 @@ bool MotorController::step(bool isFalling) {
 		// If it's been longer than the time we have to wait, let's do the next movement or step
 		if (timeSince((float)lastClock) >= currMo.time[currMo.currentIndex-1])
 		{
+
 
 			//If motion is over
 			if (currMo.currentIndex == currMo.length)
@@ -698,20 +711,21 @@ bool MotorController::step(bool isFalling) {
 				std::cout <<"\nStep "<< currMo.currentIndex<< " of "<< currMo.length-1<< " should take " << currMo.time[currMo.currentIndex] << " seconds: " <<std::endl;
 
 				/*show results of the step. Did the motors go where they were supposed to? also show the speeds. formatted for easy reading*/
-				for (int i = 0; i < currMo.num_motors; i++) {
-					int present_position= getMotorPositionReadWord(i+1);
-					if(i<9){
-						std::cout <<"Motor  "<< currMo.motorIDs[currMo.currentIndex][i]<< "  Goal Position: " <<data[i]<<"\tActual Position: "<< present_position<<"\tError: "<<abs(data[i]-present_position);
-						std::cout<<"\tSpeed: "<<currMo.motorVelocities[currMo.currentIndex][i]<< std::endl;
-					}
-					else{
-						std::cout <<"Motor "<< currMo.motorIDs[currMo.currentIndex][i]<< "  Goal Position:  " <<data[i]<<"\tActual Position: "<< present_position<<"\tError: "<<abs(data[i]-present_position);
-						std::cout <<"\tSpeed: "<<currMo.motorVelocities[currMo.currentIndex][i]<< std::endl;
-
-					}
-				}
+//				for (int i = 0; i < currMo.num_motors; i++) {
+//					int present_position= getMotorPositionReadWord(i+1);
+//					if(i<9){
+//						std::cout <<"Motor  "<< currMo.motorIDs[currMo.currentIndex][i]<< "  Goal Position: " <<data[i]<<"\tActual Position: "<< present_position<<"\tError: "<<abs(data[i]-present_position);
+//						std::cout<<"\tSpeed: "<<currMo.motorVelocities[currMo.currentIndex][i]<< std::endl;
+//					}
+//					else{
+//						std::cout <<"Motor "<< currMo.motorIDs[currMo.currentIndex][i]<< "  Goal Position:  " <<data[i]<<"\tActual Position: "<< present_position<<"\tError: "<<abs(data[i]-present_position);
+//						std::cout <<"\tSpeed: "<<currMo.motorVelocities[currMo.currentIndex][i]<< std::endl;
+//
+//					}
+//				}
 				// Execute the next step
-				correctBalance(balance_server.checkBalance());
+				balance_updates=1;
+				//correctBalance(balance_server.checkBalance());
 				executeNext(currMo);
 				//getTorqueReadings();
 				// Increment the motion counter
@@ -721,15 +735,19 @@ bool MotorController::step(bool isFalling) {
 			// Return the correct value;
 			return returnVar;
 		}
-
-		//correctBalance(balance_server.checkBalance());
+		if(balance_updates>0){
+		correctBalance(balance_server.checkBalance());
+		balance_updates--;
+		}
 		return returnVar;
 
 	}
 }
 void MotorController::correctBalance(int y_accel){
 	balance_slowdown= 0;
-	if(y_accel<4 && y_accel>16){
+//	previous_balance= y_accel;
+
+	if(y_accel<5 && y_accel>14){
 		//robot is falling
 		//step(true); disable all motors or set torque to 0 for all, let robot fall
 	}
@@ -738,17 +756,70 @@ void MotorController::correctBalance(int y_accel){
 		return;
 	}
 
-	else if(currentMotion == "W0_m" || currentMotion == "W1" || currentMotion == "W2" || currentMotion == "W1i" || currentMotion == "W2i"){
+	else{
 
-		if(y_accel> 6 && y_accel<14){	//robot is relatively balanced
+		if(y_accel> 7 && y_accel<12){	//robot is relatively balanced
 			//do nothing?
+			previous_balance=y_accel;
 		}
+		//if leaning to the right, incrementally adjust balance
+		else if(previous_balance<=10 ){
+			printf("got to right side");
+			if(y_accel<8){
+				previous_balance=y_accel;
+				balance_slowdown=.6;
 
-		else if(y_accel == 4 || y_accel == 5 || y_accel == 6 || y_accel == 14 || y_accel == 15 || y_accel == 16){
-			//robot is off balanced but maybe not falling yet
-				balance_slowdown= .8;	//slow down the first step of the next motion
+			}
+//			if(y_accel<previous_balance){
+//				printf("leaning more now");
+//				switch(y_accel){
+//				case 4:
+//					previous_balance=y_accel;
+//					balance_slowdown=.8;	//closer to tipping
+//					break;
+//				case 5:
+//					previous_balance=y_accel;
+//					balance_slowdown=.5;
+//					break;
+//				case 6:
+//					previous_balance=y_accel;
+//					balance_slowdown=.2;	//more balanced
+//					break;
+//				}
+//			}
+	}
+		//if leaning to the left
+		else if(previous_balance>=10 ){
+			printf("got to left side");
+			if(y_accel>11){
+				previous_balance=y_accel;
+				balance_slowdown=.6;
 
-		}
+			}
+
+//			if(y_accel>previous_balance){
+//				switch(y_accel){
+//				case 14:
+//					previous_balance=y_accel;
+//					balance_slowdown=.2;	//more balanced
+//					break;
+//				case 15:
+//					previous_balance=y_accel;
+//					balance_slowdown=.5;
+//					break;
+//				case 16:
+//					previous_balance=y_accel;
+//					balance_slowdown=.8;	//closer to tipping
+//					break;
+//				}
+//			}
+	}
+//
+//		else if(y_accel == 4 || y_accel == 5 || y_accel == 6 || y_accel == 14 || y_accel == 15 || y_accel == 16){
+//			//robot is off balanced but maybe not falling yet
+//				balance_slowdown= .8;	//slow down the first step of the next motion
+//
+//		}
 	}
 }
 /**
@@ -812,41 +883,41 @@ void MotorController::sendSyncWrite(std::vector<int> ids, int address, int instr
 	dxl_txrx_packet();//sends the packet
 	result = dxl_get_result( );
 
-	if( result == COMM_TXSUCCESS )
-
-	{
-		std::cout << "COMM_TXSUCCESS "<<std::endl;
-	}
-
-	else if( result == COMM_RXSUCCESS )
-
-	{
-		std::cout << " "<<std::endl;
-	}
-
-	else if( result == COMM_TXFAIL )
-
-	{
-		std::cout << "COMM_TXFAIL "<<std::endl;
-	}
-
-	else if( result == COMM_RXFAIL)
-
-	{
-		std::cout << "COMM_RXFAIL "<<std::endl;
-	}
-
-	else if( result == COMM_TXERROR )
-
-	{
-		std::cout << "COMM_TXERROR "<<std::endl;
-	}
-
-	else if( result == COMM_RXWAITING )
-
-	{
-		std::cout << "COMM_RXWAITING "<<std::endl;
-	}
+//	if( result == COMM_TXSUCCESS )
+//
+//	{
+//		std::cout << "COMM_TXSUCCESS "<<std::endl;
+//	}
+//
+//	else if( result == COMM_RXSUCCESS )
+//
+//	{
+//		std::cout << " "<<std::endl;
+//	}
+//
+//	else if( result == COMM_TXFAIL )
+//
+//	{
+//		std::cout << "COMM_TXFAIL "<<std::endl;
+//	}
+//
+//	else if( result == COMM_RXFAIL)
+//
+//	{
+//		std::cout << "COMM_RXFAIL "<<std::endl;
+//	}
+//
+//	else if( result == COMM_TXERROR )
+//
+//	{
+//		std::cout << "COMM_TXERROR "<<std::endl;
+//	}
+//
+//	else if( result == COMM_RXWAITING )
+//
+//	{
+//		std::cout << "COMM_RXWAITING "<<std::endl;
+//	}
 }
 
 Motion MotorController::getMotionFile() {

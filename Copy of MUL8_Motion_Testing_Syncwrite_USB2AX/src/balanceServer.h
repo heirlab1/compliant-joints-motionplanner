@@ -39,6 +39,7 @@ public:
 	balanceServer();
 	virtual ~balanceServer();
 	int checkBalance(void);
+	void init();
 };
 
 #endif /* BALANCE_SERVER_H_ */
