@@ -616,9 +616,9 @@ void MotorController::executeNext(Motion motion) {
 		if(i==0){
 //			std::cout<<"\n"<< motors.size() <<" ACTIVE JOINTS! "<<std::endl;
 		}
-		std::cout<<" "<<motors[i];
+		//std::cout<<" "<<motors[i];
 	}
-	std::cout<<"\n\n";
+	//std::cout<<"\n\n";
 	// Reset the clock
 	lastClock = clock();
 }
@@ -719,12 +719,12 @@ bool MotorController::step(bool isFalling) {
 
 				//Print the status of the current motion.
 
-				if(currMo.currentIndex!=0){
-					std::cout <<"\nMotion: "<< currMo.friendlyName <<std::endl;
-
-					std::cout << "Step " << currMo.currentIndex-1<< " took " << (float) timeSince((float) lastClock) << " seconds." << std::endl;
-				}
-				std::cout <<"\nStep "<< currMo.currentIndex<< " of "<< currMo.length-1<< " should take " << currMo.time[currMo.currentIndex] << " seconds: " <<std::endl;
+//				if(currMo.currentIndex!=0){
+//					std::cout <<"\nMotion: "<< currMo.friendlyName <<std::endl;
+//
+//					std::cout << "Step " << currMo.currentIndex-1<< " took " << (float) timeSince((float) lastClock) << " seconds." << std::endl;
+//				}
+//				std::cout <<"\nStep "<< currMo.currentIndex<< " of "<< currMo.length-1<< " should take " << currMo.time[currMo.currentIndex] << " seconds: " <<std::endl;
 
 				/*show results of the step. Did the motors go where they were supposed to? also show the speeds. formatted for easy reading*/
 //				for (int i = 0; i < currMo.num_motors; i++) {
@@ -787,7 +787,7 @@ void MotorController::correctBalance(int y_accel){
 				//					balance_slowdown=.2;
 				//				}
 				//				else{
-				balance_slowdown=0;//.6;
+				balance_slowdown=.6;
 			}
 			//
 			//			}
@@ -803,7 +803,7 @@ void MotorController::correctBalance(int y_accel){
 				//					balance_slowdown=.2;
 				//				}
 				//				else{
-				balance_slowdown=0;//.6;
+				balance_slowdown=.6;
 				//				}
 
 			}
